@@ -31,6 +31,40 @@ type Errors struct {
 	Langs string   `json:"langs"`
 }
 
+func (e Errors) ToArray() []string {
+	var res []string
+
+	if e.Fio != "" {
+		res = append(res, e.Fio)
+	}
+
+	if e.Phone != "" {
+		res = append(res, e.Phone)
+	}
+
+	if e.Email != "" {
+		res = append(res, e.Email)
+	}
+
+	if e.Birthdate != "" {
+  		res = append(res, e.Birthdate)
+	}
+
+	if e.Gender != "" {
+		res = append(res, e.Gender)
+	}
+
+	if e.Bio != "" {
+   		res = append(res, e.Bio)
+	}
+
+	if e.Langs != "" {
+		res = append(res, e.Langs)
+	}
+
+	return res
+}
+
 type Response struct {
 	Errors Errors `json:"errors"`
 	Application Application `json:"application"`
@@ -38,7 +72,7 @@ type Response struct {
 }
 
 func IsSucceed(errors Errors) bool {
-	return errors.Fio == "" && errors.Phone == "" && errors.Email == "" && errors.Birthdate == "" && errors.Gender == "" && errors.Bio == "" && errors.Langs == ""
+	return len(errors.ToArray()) == 0
 }
 
 func validate(appl Application) Response {

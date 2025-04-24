@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Задание 3</title>
+    <title>Задание 4</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -60,13 +60,13 @@
 
     {{ if . }}
     <div class="message">
-        {{ range . }}
-            {{ if eq . "Данные успешно сохранены" }}
-        <div class="success"> {{ . }} </div>
-            {{ else }}
+    {{ if .Succeed }}
+        <div class="success"> Данные успешно сохранены </div>
+    {{ else }}
+        {{ range .Errors.ToArray }}
         <div class="fail"> {{ . }} </div>
-            {{ end }}
         {{ end }}
+    {{ end }}
     </div>
     {{ end }}
 </body>
