@@ -24,9 +24,9 @@
 
             <div class="gender">
                 <label>Пол:</label>
-                <input type="radio" id="male" name="gender" value="male" {{  if .Application.Gender == "male" }} checked {{ end }}>
+                <input type="radio" id="male" name="gender" value="male" {{  if eq .Application.Gender "male" }} checked {{ end }}>
                 <label for="male">Мужской</label>
-                <input type="radio" id="female" name="gender" value="female" {{  if .Application.Gender == "female" }} checked {{ end }}>
+                <input type="radio" id="female" name="gender" value="female" {{  if eq .Application.Gender "female" }} checked {{ end }}>
                 <label for="female">Женский</label>
             </div>
 
