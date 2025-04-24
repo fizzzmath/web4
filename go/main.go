@@ -1,0 +1,147 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"html/template"
+	"net/http"
+	"net/http/cgi"
+	"regexp"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+type Application struct {
+	Fio string `json:"fio"`
+	Phone string `json:"phone"`
+	Email string `json:"email"`
+	Birthdate string `json:"birthdate"`
+	Gender string `json:"gender"`
+	Bio string `json:"bio"`
+	Langs []string `json:"langs"`
+}
+
+type Errors struct {
+	Fio string `json:"fio"`
+	Phone string   `json:"phone"`
+	Email string   `json:"email"`
+	Birthdate string `json:"birthdate"`
+	Gender string   `json:"gender"`
+	Bio string   `json:"bio"`
+	Langs string   `json:"langs"`
+}
+
+type Response struct {
+	Errors Errors `json:"errors"`
+	Application Application `json:"application"`
+	Succeed bool `json:"succeed"`
+}
+
+func IsSucceed(errors Errors) bool {
+	return errors.Fio == "" && errors.Phone == "" && errors.Email == "" && errors.Birthdate == "" && errors.Gender == "" && errors.Bio == "" && errors.Langs == ""
+}
+
+func validate(appl Application) Response {
+	var re *regexp.Regexp
+
+	var errors Errors
+
+	pattern := `^([А-ЯA-Z][а-яa-z]+ ){2}[А-ЯA-Z][а-яa-z]+$`
+	re = regexp.MustCompile(pattern)
+
+	if !re.MatchString(appl.Fio) {
+		errors.Fio = "Поле должно быть заполнено в формате: Фамилия Имя Отчество"
+	}
+
+	pattern = `^(\+7|8)9\d{9}$`
+	re = regexp.MustCompile(pattern)
+
+	if !re.MatchString(appl.Phone) {
+		errors.Phone = "Поле должно быть заполнено в формате: +79XXXXXXXXX или 89XXXXXXXXX"
+	}
+
+	pattern = `^[A-Za-z][\w\.-_]+@\w+(\.[a-z]{2,})+$`
+	re = regexp.MustCompile(pattern)
+
+	if !re.MatchString(appl.Email) {
+		errors.Email = "Поле должно быть заполнено в формате: имя@домен"
+	}
+
+	if appl.Birthdate == "" {
+		errors.Birthdate = "Поле должно быть заполнено"
+	}
+
+	if appl.Gender == "" {
+		errors.Gender = "Поле должно быть заполнено"
+	}
+
+	if appl.Bio == "" {
+  		errors.Bio = "Поле должно быть заполнено"
+	}
+
+	if len(appl.Langs) == 0 {
+		errors.Langs = "Поле должно быть заполнено"
+	}
+
+	return Response{errors, appl, IsSucceed(errors)}
+}
+
+func insertData(appl Application) {
+	db, _ := sql.Open("mysql", "u68867:6788851@/u68867")
+	defer db.Close()
+
+	insert, _ := db.Query(fmt.Sprintf("INSERT INTO APPLICATION(NAME, PHONE, EMAIL, BIRTHDATE, GENDER, BIO) VALUES ('%s', '%s', '%s', '%s', '%s', '%s')", appl.Fio, appl.Phone, appl.Email, appl.Birthdate, appl.Gender, appl.Bio))
+	defer insert.Close()
+
+	sel, _ := db.Query("SELECT ID FROM APPLICATION ORDER BY ID DESC LIMIT 1")
+	defer sel.Close()
+
+	var id int
+	for sel.Next() {
+		sel.Scan(&id)
+	}
+
+	for _, name := range appl.Langs {
+		sel, _ := db.Query(fmt.Sprintf("SELECT ID FROM PL WHERE NAME='%s'", name))
+		defer sel.Close()
+
+		var plId int
+		for sel.Next() {
+			sel.Scan(&plId)
+		}
+
+		insert, _ := db.Query(fmt.Sprintf("INSERT INTO FAVORITE_PL (APPLICATION_ID, PL_ID) VALUES ('%d', '%d')", id, plId))
+		defer insert.Close()
+	}
+}
+
+func applicationHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, _ := template.ParseFiles("index.html")
+
+	var response Response
+
+	if r.Method == http.MethodPost {
+		r.ParseForm()
+
+		appl := Application{
+			Fio: r.FormValue("fio"),
+			Phone: r.FormValue("phone"),
+			Email: r.FormValue("email"),
+			Birthdate: r.FormValue("birthdate"),
+			Gender: r.FormValue("gender"),
+			Langs: r.PostForm["langs[]"],
+			Bio: r.FormValue("bio")}
+
+		response = validate(appl)
+
+		if response.Succeed {
+			insertData(appl)
+		}
+	}
+
+	tmpl.Execute(w, response)
+}
+
+func main() {
+	cgi.Serve(http.HandlerFunc(applicationHandler))
+}
