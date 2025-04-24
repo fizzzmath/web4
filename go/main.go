@@ -161,7 +161,7 @@ func insertData(appl Application) {
 	}
 }
 
-func setCookies(w http.ResponseWriter, response Response) {
+func setCookies(w http.ResponseWriter, response Response) *http.Cookie {
 	responseJSON, _ := json.Marshal(response)
 	responseEncoded := url.QueryEscape(string(responseJSON))
 
@@ -171,6 +171,8 @@ func setCookies(w http.ResponseWriter, response Response) {
 	}
 
 	http.SetCookie(w, cookie)
+
+	return cookie
 }
 
 func getCookies(r *http.Request) (*http.Cookie, error) {
@@ -209,10 +211,13 @@ func applicationHandler(w http.ResponseWriter, r *http.Request) {
 
 		response = validate(appl)
 
-		setCookies(w, response)
+		cookie := setCookies(w, response)
 
 		if response.Succeed {
 			insertData(appl)
+
+			cookie.MaxAge = 3600 * 24 * 365
+			http.SetCookie(w, cookie)
 		}
 	}
 

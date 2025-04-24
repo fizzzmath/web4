@@ -92,7 +92,9 @@ button:hover {
     color: #0f0;
 }
 
-.fail {
-    color: #f00;
-    border: 1px solid #f00;
+.error {
+    color: red;
+    font-size: 12px;
+    margin-top: -5px;
+    margin-bottom: 10px;
 }
