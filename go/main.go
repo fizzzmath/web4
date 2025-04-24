@@ -73,6 +73,16 @@ type Response struct {
 	Succeed bool `json:"succeed"`
 }
 
+func (r Response) contains(lang string) bool {
+	for _, s := range r.Application.Langs {
+		if s == lang {
+			return true
+		}
+	}
+
+	return false
+}
+
 func IsSucceed(errors Errors) bool {
 	return len(errors.ToArray()) == 0
 }
