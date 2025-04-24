@@ -2,10 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 	"net/http/cgi"
+	"net/url"
 	"regexp"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -149,6 +151,18 @@ func insertData(appl Application) {
 	}
 }
 
+func setCookies(w http.ResponseWriter, response Response) {
+	responseJSON, _ := json.Marshal(response)
+	responseEncoded := url.QueryEscape(string(responseJSON))
+
+	cookie := &http.Cookie {
+		Name: "application",
+		Value: responseEncoded,
+	}
+
+	http.SetCookie(w, cookie)
+}
+
 func applicationHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("index.html")
 
@@ -167,6 +181,8 @@ func applicationHandler(w http.ResponseWriter, r *http.Request) {
 			Bio: r.FormValue("bio")}
 
 		response = validate(appl)
+
+		setCookies(w, response)
 
 		if response.Succeed {
 			insertData(appl)
