@@ -163,10 +163,27 @@ func setCookies(w http.ResponseWriter, response Response) {
 	http.SetCookie(w, cookie)
 }
 
+func getCookies(r *http.Request) (*http.Cookie, error) {
+	cookie, err := r.Cookie("application")
+
+	if err != nil {
+		return cookie, err
+	}
+
+	return cookie, nil
+}
+
 func applicationHandler(w http.ResponseWriter, r *http.Request) {
 	tmpl, _ := template.ParseFiles("index.html")
 
 	var response Response
+
+	cookie, err := getCookies(r);
+
+	if err == nil {
+		responseJSON, _ := url.QueryUnescape(cookie.Value)
+		json.Unmarshal([]byte(responseJSON), &response)
+	}
 
 	if r.Method == http.MethodPost {
 		r.ParseForm()
