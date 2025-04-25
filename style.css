@@ -98,3 +98,7 @@ button:hover {
     margin-top: -5px;
     margin-bottom: 10px;
 }
+
+input.error__input, select.error__input, textarea.error__input {
+    border: 2px solid red;
+}
